@@ -1,31 +1,29 @@
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
 
-public class ServerChat{
-    int port;
-    
-    
-    public ServerChat(int port) throws IOException{
-        this.port=port;
-        ServerSocket server = new ServerSocket(port);
-        while(true){
-            
-            Socket connection = server.accept();
-            
-            System.out.println("new client connected");
-            ServiceChat service=new ServiceChat(connection);
-            Thread clientThread = new Thread(service);            
-            clientThread.start();
-            
+
+import java.net.*;
+import java.io.*;
+import java.util.Scanner;
+import java.util.logging.*;
+
+public class ServerChat {
+
+    private final static int NBMAXUSERCONNECTED = 3;
+    protected static boolean runServer = true;
+    public static final Logger logger = Logger.getLogger(ServiceChat.class.getSimpleName());
+
+    public ServerChat(final int port){
+       
+
+        try(ServerSocket listener = new ServerSocket(port)) {
+            new Thread(new ServiceChat(NBMAXUSERCONNECTED)).start();
+            while (runServer) new Thread(new ServiceChat(listener.accept(), NBMAXUSERCONNECTED)).start();
+            logger.log(Level.INFO, "<SYSTEM> ServerChat halted");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public static void main(String[] argv) throws IOException{
-        new ServerChat(9999);
+    public static void main(String[] argv){
+        new ServerChat(7777);
     }
-
-    
-
 }
